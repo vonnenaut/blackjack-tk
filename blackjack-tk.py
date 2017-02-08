@@ -1,15 +1,16 @@
 # Mini-project #6 - Blackjack
 import Tkinter as tk
 import random
+from PIL import Image
 
 # load card sprite - 936x384 - source: jfitz.com
 CARD_SIZE = (72, 96)
 CARD_CENTER = (36, 48)
-card_images = simplegui.load_image("http://storage.googleapis.com/codeskulptor-assets/cards_jfitz.png")
+card_images = Image.open("http://storage.googleapis.com/codeskulptor-assets/cards_jfitz.png")
 
 CARD_BACK_SIZE = (72, 96)
 CARD_BACK_CENTER = (36, 48)
-card_back = simplegui.load_image("http://storage.googleapis.com/codeskulptor-assets/card_jfitz_back.png")    
+card_back = Image.open("http://storage.googleapis.com/codeskulptor-assets/card_jfitz_back.png")    
 
 # initialize some useful global variables
 in_play = False
@@ -232,21 +233,6 @@ def draw(canvas):
     canvas.draw_text("Player's hand:", [50, 335], 15, 'Black')
     canvas.draw_text("Won/Lost: " + str(won) + "/" + str(lost), [155,25], 22, 'Black')
 
-
-# # initialization frame
-# frame = simplegui.create_frame("Blackjack", 600, 600)
-# frame.set_canvas_background("Green")
-# 
-# #create buttons and canvas callback
-# frame.add_button("Deal", deal, 200)
-# frame.add_button("Hit",  hit, 200)
-# frame.add_button("Stand", stand, 200)
-# frame.set_draw_handler(draw)
-# 
-# 
-# # get things rolling
-# deal()
-# frame.start()
 
 # draw handler
 ##
