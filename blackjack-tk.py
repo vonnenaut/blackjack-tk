@@ -1,3 +1,6 @@
+## TO-DO:
+# image.crop(box)  used to get a portion of an image
+
 # Mini-project #6 - Blackjack
 import Tkinter as tk
 import random
@@ -50,13 +53,13 @@ class Card:
     def draw(self, canvas, pos):
         card_loc = (CARD_CENTER[0] + CARD_SIZE[0] * RANKS.index(self.rank), 
                     CARD_CENTER[1] + CARD_SIZE[1] * SUITS.index(self.suit))
-        # tkinter:
-        canvas.create_image((card_loc), img)
+        # draw all the cards
+        canvas.draw_image(card_images, card_loc, CARD_SIZE, [pos[0] + CARD_CENTER[0], pos[1] + CARD_CENTER[1]], CARD_SIZE)
+        
         # hide dealer's hole card if in play
-        # [50, 70]
         if in_play is True:
-            # canvas.draw_image(image, center_source, width_height_source, center_dest, width_height_dest)
             canvas.draw_image(card_back, [CARD_BACK_CENTER[0], CARD_BACK_CENTER[1]], CARD_BACK_SIZE, [85, 118], CARD_BACK_SIZE)
+
 
     
 
@@ -102,8 +105,8 @@ class Hand:
    
     def draw(self, canvas, pos):
         """ draw a hand on the canvas, use the draw method for cards """
-        # for card in self.hand:
-            # card.draw(canvas, pos)
+        for card in self.hand:
+            card.draw(canvas, pos)
         
 
 # define deck class 
@@ -197,12 +200,16 @@ def stand():
 
 # main application class
 ##
-class BlackjackGame():
+class BlackjackGame(tk.Frame):
     def __init__(self, parent, *args, **kwargs):
         tk.Frame.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
+        self.in_play = False
+        outcome = ""
+        won = 0
+        lost = 0
+        deck = []
 
-        #TO-DO
-        
 
 
 
@@ -248,8 +255,8 @@ if __name__ == '__main__':
     root.configure(background='black')
     
     # create canvas for drawing cards    
-    canvas = tk.Canvas(root, width=16*CARD_WIDTH, height=CARD_HEIGHT)    
+    canvas = tk.Canvas(root, width=16*CARD_SIZE[0], height=CARD_SIZE[1])    
 
     # tk magic follows here
-    MemoryGame(root).pack(side="top", fill="both", expand=True)
+    BlackjackGame(root).pack(side="top", fill="both", expand=True)
     root.mainloop()
