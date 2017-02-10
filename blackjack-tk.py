@@ -30,7 +30,7 @@ VALUES = {'A':1, '2':2, '3':3, '4':4, '5':5, '6':6, '7':7, '8':8, '9':9, 'T':10,
 
 # define card class
 class Card:
-    global in_play
+    global in_play, card_back
 
     def __init__(self, suit, rank):
         if (suit in SUITS) and (rank in RANKS):
@@ -59,7 +59,6 @@ class Card:
         # hide dealer's hole card if in play
         if in_play is True:
             canvas.draw_image(card_back, [CARD_BACK_CENTER[0], CARD_BACK_CENTER[1]], CARD_BACK_SIZE, [85, 118], CARD_BACK_SIZE)
-
 
     
 
@@ -134,69 +133,7 @@ class Deck:
         for i in range(len(self.deck)):
             string += str(self.deck[i].get_suit()) + str(self.deck[i].get_rank()) + " "
         return string
-
-
-#define event handlers for buttons
-def deal():
-    global outcome, in_play, deck, player_hand, dealer_hand, outcome, lost
-    
-    if in_play is not True:
-        # creat a Deck object and shuffle all the cards
-        deck = Deck()
-        deck.shuffle()
-        # create a player hand, adding two cards from the deck
-        player_hand = Hand()
-        player_hand.add_card(deck.deal_card())
-        player_hand.add_card(deck.deal_card())
-        # create a dealer hand, adding two cards from the deck
-        dealer_hand = Hand()
-        dealer_hand.add_card(deck.deal_card())
-        dealer_hand.add_card(deck.deal_card())
-        outcome = "Hit or stand?"
-        in_play = True
-    else:
-        lost += 1
-        outcome = "You have lost!  New deal?"
-        in_play = False
-    
-def hit():
-    """ if the hand is in play, hits the player; if busted, assigns a message to outcome, update in_play and score """
-    global in_play, deck, player_hand, dealer_hand, outcome, lost
-
-    if in_play:
-        player_hand.add_card(deck.deal_card())
-
-        if player_hand.get_value() > 21:
-            outcome = "You have busted!  Dealer wins.  New deal?"
-            lost += 1
-
-def stand():
-    """ if hand is in play, repeatedly hit dealer until his hand has value 17 or more; assign a message to outcome, update in_play and score """
-    global dealer_hand, deck, outcome, in_play, won, lost
-
-    if in_play:
-        while dealer_hand.get_value() < 17:
-            dealer_hand.add_card(deck.deal_card())
-
-        if dealer_hand.get_value() > 21:
-            # print "Dealer is busted.\nPlayer wins."
-            outcome = "Dealer is busted.  Player wins.  New deal?"
-            won += 1
-        elif player_hand.get_value() > 21:
-            # print "Player is busted.\nDealer wins."
-            outcome = "Player is busted.  Dealer wins.  New deal?"
-            lost += 1
-        elif dealer_hand.get_value() >= player_hand.get_value():
-            # print "Dealer wins."
-            outcome = "Dealer wins.  New deal?"
-            lost += 1
-        else:
-            # print "Player wins."
-            outcome = "Player wins!  New deal?"
-            won += 1
-
-    in_play = False
-
+        
 
 # main application class
 ##
@@ -205,10 +142,88 @@ class BlackjackGame(tk.Frame):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
         self.in_play = False
-        outcome = ""
-        won = 0
-        lost = 0
-        deck = []
+        self.outcome = tk.StringVar()
+        self.outcome.set("")
+        self.won = 0
+        self.lost = 0
+        self.deck = []
+        self.makeWidgets()
+
+    def makeWidgets(self):
+        """ set up GUI, i.e., create widgets """
+        # globals
+        global CARD_WIDTH, CARD_HEIGHT      
+            
+        canvas.pack()
+        # add buttons to the frame
+        tk.Button(root, text='Deal', command=self.deal).pack(side="left")
+        tk.Button(root, text='Hit', command=self.hit).pack(side="left")
+        tk.Button(root, text='Stay', command=self.stay).pack(side="left")
+        # add label which updates outcome
+        tk.Label(root, textvariable=self.outcome, font=('Helvetica',12), fg='white', bg='black').pack(side="left")
+        # now draw everything
+        draw(canvas, self.deck)
+
+    #define event handlers for buttons
+    def deal(self):
+        global outcome, in_play, deck, player_hand, dealer_hand, outcome, lost
+        
+        if in_play is not True:
+            # creat a Deck object and shuffle all the cards
+            deck = Deck()
+            deck.shuffle()
+            # create a player hand, adding two cards from the deck
+            player_hand = Hand()
+            player_hand.add_card(deck.deal_card())
+            player_hand.add_card(deck.deal_card())
+            # create a dealer hand, adding two cards from the deck
+            dealer_hand = Hand()
+            dealer_hand.add_card(deck.deal_card())
+            dealer_hand.add_card(deck.deal_card())
+            outcome = "Hit or stand?"
+            in_play = True
+        else:
+            lost += 1
+            outcome = "You have lost!  New deal?"
+            in_play = False
+
+    def hit(self):
+        """ if the hand is in play, hits the player; if busted, assigns a message to outcome, update in_play and score """
+        global in_play, deck, player_hand, dealer_hand, outcome, lost
+    
+        if in_play:
+            player_hand.add_card(deck.deal_card())
+    
+            if player_hand.get_value() > 21:
+                outcome = "You have busted!  Dealer wins.  New deal?"
+                lost += 1
+
+    def stay(self):
+        """ if hand is in play, repeatedly hit dealer until his hand has value 17 or more; assign a message to outcome, update in_play and score """
+        global dealer_hand, deck, outcome, in_play, won, lost
+    
+        if in_play:
+            while dealer_hand.get_value() < 17:
+                dealer_hand.add_card(deck.deal_card())
+    
+            if dealer_hand.get_value() > 21:
+                # print "Dealer is busted.\nPlayer wins."
+                outcome = "Dealer is busted.  Player wins.  New deal?"
+                won += 1
+            elif player_hand.get_value() > 21:
+                # print "Player is busted.\nDealer wins."
+                outcome = "Player is busted.  Dealer wins.  New deal?"
+                lost += 1
+            elif dealer_hand.get_value() >= player_hand.get_value():
+                # print "Dealer wins."
+                outcome = "Dealer wins.  New deal?"
+                lost += 1
+            else:
+                # print "Player wins."
+                outcome = "Player wins!  New deal?"
+                won += 1
+    
+        in_play = False
 
 
 
@@ -255,7 +270,7 @@ if __name__ == '__main__':
     root.configure(background='black')
     
     # create canvas for drawing cards    
-    canvas = tk.Canvas(root, width=16*CARD_SIZE[0], height=CARD_SIZE[1])    
+    canvas = tk.Canvas(root, width=600, height=600)    
 
     # tk magic follows here
     BlackjackGame(root).pack(side="top", fill="both", expand=True)
