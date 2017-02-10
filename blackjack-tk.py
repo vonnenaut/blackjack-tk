@@ -1,11 +1,16 @@
+## Blackjack using tkinter
+##
 ## TO-DO:
 # image.crop(box)  used to get a portion of an image
 
-# Mini-project #6 - Blackjack
+# imports
+##
 import Tkinter as tk
 import random
 from PIL import Image
 
+# globals
+##
 # load card sprite - 936x384 - source: jfitz.com
 CARD_SIZE = (72, 96)
 CARD_CENTER = (36, 48)
@@ -28,8 +33,10 @@ RANKS = ('A', '2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K')
 VALUES = {'A':1, '2':2, '3':3, '4':4, '5':5, '6':6, '7':7, '8':8, '9':9, 'T':10, 'J':10, 'Q':10, 'K':10}
 
 
-# define card class
+# classes
+##
 class Card:
+    """ handles all the information for each individual card """
     global in_play, card_back
 
     def __init__(self, suit, rank):
@@ -61,9 +68,8 @@ class Card:
             canvas.draw_image(card_back, [CARD_BACK_CENTER[0], CARD_BACK_CENTER[1]], CARD_BACK_SIZE, [85, 118], CARD_BACK_SIZE)
 
     
-
-# define hand class
 class Hand:
+    """ handles each hand for the player and deaer """
     def __init__(self):
         """ creates Hand object """
         self.hand = [] # an empty list for Card objects constituting a hand
@@ -108,8 +114,8 @@ class Hand:
             card.draw(canvas, pos)
         
 
-# define deck class 
 class Deck:
+    """ handles the deck of cards """
     def __init__(self):
         """ creates a Deck object """
         self.deck = []
@@ -135,9 +141,8 @@ class Deck:
         return string
         
 
-# main application class
-##
 class BlackjackGame(tk.Frame):
+    """ main class which handles the game start and state changes """
     def __init__(self, parent, *args, **kwargs):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
