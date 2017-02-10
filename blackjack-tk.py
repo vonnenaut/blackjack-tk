@@ -1,26 +1,16 @@
-## Blackjack using tkinter
-##
-## TO-DO:
-# image.crop(box)  used to get a portion of an image
-
-# imports
-##
+# Blackjack using Tkinter
 import Tkinter as tk
 import random
-from PIL import Image
+from PIL import Image, ImageTk
 
 # globals
 ##
-# load card sprite - 936x384 - source: jfitz.com
 CARD_SIZE = (72, 96)
 CARD_CENTER = (36, 48)
-card_images = Image.open("cards_jfitz.png")
-
 CARD_BACK_SIZE = (72, 96)
 CARD_BACK_CENTER = (36, 48)
-card_back = Image.open("card_jfitz_back.png")
-
-# initialize some useful global variables
+card_images = None
+card_back = None
 in_play = False
 outcome = ""
 won = 0
@@ -33,11 +23,9 @@ RANKS = ('A', '2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K')
 VALUES = {'A':1, '2':2, '3':3, '4':4, '5':5, '6':6, '7':7, '8':8, '9':9, 'T':10, 'J':10, 'Q':10, 'K':10}
 
 
-# classes
-##
+# define card class
 class Card:
-    """ handles all the information for each individual card """
-    global in_play, card_back
+    global in_play, card_back, card_images
 
     def __init__(self, suit, rank):
         if (suit in SUITS) and (rank in RANKS):
@@ -60,16 +48,16 @@ class Card:
     def draw(self, canvas, pos):
         card_loc = (CARD_CENTER[0] + CARD_SIZE[0] * RANKS.index(self.rank), 
                     CARD_CENTER[1] + CARD_SIZE[1] * SUITS.index(self.suit))
-        # draw all the cards
-        canvas.draw_image(card_images, card_loc, CARD_SIZE, [pos[0] + CARD_CENTER[0], pos[1] + CARD_CENTER[1]], CARD_SIZE)
-        
+        # draw the card
+        canvas.create_image(80, 400, image=card_images)
+                
         # hide dealer's hole card if in play
         if in_play is True:
-            canvas.draw_image(card_back, [CARD_BACK_CENTER[0], CARD_BACK_CENTER[1]], CARD_BACK_SIZE, [85, 118], CARD_BACK_SIZE)
-
+            canvas.create_image(80, 120, image=card_back)
     
+
+# define hand class
 class Hand:
-    """ handles each hand for the player and deaer """
     def __init__(self):
         """ creates Hand object """
         self.hand = [] # an empty list for Card objects constituting a hand
@@ -114,8 +102,8 @@ class Hand:
             card.draw(canvas, pos)
         
 
+# define deck class 
 class Deck:
-    """ handles the deck of cards """
     def __init__(self):
         """ creates a Deck object """
         self.deck = []
@@ -139,10 +127,11 @@ class Deck:
         for i in range(len(self.deck)):
             string += str(self.deck[i].get_suit()) + str(self.deck[i].get_rank()) + " "
         return string
-        
 
+
+# main application class
+##
 class BlackjackGame(tk.Frame):
-    """ main class which handles the game start and state changes """
     def __init__(self, parent, *args, **kwargs):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
@@ -157,8 +146,9 @@ class BlackjackGame(tk.Frame):
     def makeWidgets(self):
         """ set up GUI, i.e., create widgets """
         # globals
-        global CARD_WIDTH, CARD_HEIGHT      
-            
+        global CARD_WIDTH, CARD_HEIGHT, card_images, card_back      
+        
+        canvas.configure(background='green4')    
         canvas.pack()
         # add buttons to the frame
         tk.Button(root, text='Deal', command=self.deal).pack(side="left")
@@ -166,8 +156,14 @@ class BlackjackGame(tk.Frame):
         tk.Button(root, text='Stay', command=self.stay).pack(side="left")
         # add label which updates outcome
         tk.Label(root, textvariable=self.outcome, font=('Helvetica',12), fg='white', bg='black').pack(side="left")
-        # now draw everything
-        draw(canvas, self.deck)
+        
+        # load card images
+        pil_images = Image.open("cards_jfitz.jpg")
+        card_images = ImageTk.PhotoImage(pil_images)
+
+        pil_back = Image.open("card_jfitz_back.jpg")
+        pil_cropped = pil_back.crop((0,0,72,96))
+        card_back = ImageTk.PhotoImage(pil_cropped)        
 
     #define event handlers for buttons
     def deal(self):
@@ -185,13 +181,15 @@ class BlackjackGame(tk.Frame):
             dealer_hand = Hand()
             dealer_hand.add_card(deck.deal_card())
             dealer_hand.add_card(deck.deal_card())
-            outcome = "Hit or stand?"
+            self.outcome.set("Hit or stay?")
             in_play = True
+            # now draw everything
+            draw(canvas)
         else:
             lost += 1
             outcome = "You have lost!  New deal?"
             in_play = False
-
+        
     def hit(self):
         """ if the hand is in play, hits the player; if busted, assigns a message to outcome, update in_play and score """
         global in_play, deck, player_hand, dealer_hand, outcome, lost
@@ -202,6 +200,7 @@ class BlackjackGame(tk.Frame):
             if player_hand.get_value() > 21:
                 outcome = "You have busted!  Dealer wins.  New deal?"
                 lost += 1
+        
 
     def stay(self):
         """ if hand is in play, repeatedly hit dealer until his hand has value 17 or more; assign a message to outcome, update in_play and score """
@@ -232,8 +231,8 @@ class BlackjackGame(tk.Frame):
 
 
 
-
-# draw handler    
+# draw handler  
+##  
 def draw(canvas):
     # test to make sure that card.draw works, replace with your code below
     global player_hand, dealer_hand, CARD_SIZE, outcome, won, lost
@@ -243,39 +242,21 @@ def draw(canvas):
 
     # draw player's hand
     for card in player_hand.hand:
-        card.draw(canvas, [50 + (i * CARD_SIZE[0]), 340])
+        card.draw(canvas, [25 + (i * CARD_SIZE[0]), 340])
         i += 1    
 
     # draw dealer's hand
     for card in dealer_hand.hand:
-        card.draw(canvas, [50 + (j * CARD_SIZE[0]), 70])
+        card.draw(canvas, [25 + (j * CARD_SIZE[0]), 70])
         j += 1
-
-    # draw outcome message for player
-    canvas.draw_text(outcome, [55, 250], 30, 'Black')
-
-    # draw labels for the canvas
-    canvas.draw_text("Blackjack", [10, 25], 25, 'Black')
-    canvas.draw_text("Dealer's hand:", [50, 65], 15, 'Black')
-    canvas.draw_text("Player's hand:", [50, 335], 15, 'Black')
-    canvas.draw_text("Won/Lost: " + str(won) + "/" + str(lost), [155,25], 22, 'Black')
-
-
-# draw handler
-##
-def draw(canvas, deck):
-    """ draws cards on canvas """
-    for card in deck:
-        card.draw_Card(canvas)    
 
 # start frame and game
 ##
 if __name__ == '__main__':
     root = tk.Tk()
-    root.configure(background='black')
-    
+
     # create canvas for drawing cards    
-    canvas = tk.Canvas(root, width=600, height=600)    
+    canvas = tk.Canvas(root, width=600, height=500)    
 
     # tk magic follows here
     BlackjackGame(root).pack(side="top", fill="both", expand=True)
