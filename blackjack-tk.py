@@ -10,6 +10,7 @@ CARD_CENTER = (36, 48)
 CARD_BACK_SIZE = (72, 96)
 CARD_BACK_CENTER = (36, 48)
 card_images = None
+card_sheet = None
 card_back = None
 in_play = False
 outcome = ""
@@ -25,9 +26,13 @@ VALUES = {'A':1, '2':2, '3':3, '4':4, '5':5, '6':6, '7':7, '8':8, '9':9, 'T':10,
 
 # define card class
 class Card:
-    global in_play, card_back, card_images
+    global in_play, card_back, card_images, card_sheet, CARD_SIZE, CARD_CENTER, RANKS, SUITS, curr_card_image
 
     def __init__(self, suit, rank):
+        # need to create instance reference to each image associated with a class or else they won't draw correctly
+        self.curr_card_image = None
+        self.card_back = None
+
         if (suit in SUITS) and (rank in RANKS):
             self.suit = suit
             self.rank = rank
@@ -46,14 +51,24 @@ class Card:
         return self.rank
 
     def draw(self, canvas, pos):
-        card_loc = (CARD_CENTER[0] + CARD_SIZE[0] * RANKS.index(self.rank), 
-                    CARD_CENTER[1] + CARD_SIZE[1] * SUITS.index(self.suit))
-        # draw the card
-        canvas.create_image(80, 400, image=card_images)
-                
-        # hide dealer's hole card if in play
+        card_loc = (1+CARD_SIZE[0]*RANKS.index(self.rank), CARD_SIZE[1]*SUITS.index(self.suit), CARD_SIZE[0]*(RANKS.index(self.rank)+1), CARD_SIZE[1]*(SUITS.index(self.suit)+1))
+        # load card sheet image
+        card_sheet = Image.open("cards_jfitz.jpg")
+        # crop sheet to current card-face's image
+        pil_card_cropped = card_sheet.crop((card_loc))
+        self.curr_card_image = ImageTk.PhotoImage(pil_card_cropped)
+        # draw current card
+        canvas.create_image(80, 300, image=self.curr_card_image)    
+
+        # load card back image
+        c_back = Image.open("card_jfitz_back.jpg")
+        # crop
+        pil_cropped = c_back.crop((1,0,72,96))
+        self.card_back = ImageTk.PhotoImage(pil_cropped)   
+
+        # hide dealer's hole card if in play by drawing card back
         if in_play is True:
-            canvas.create_image(80, 120, image=card_back)
+            canvas.create_image(80, 120, image=self.card_back)
     
 
 # define hand class
@@ -142,11 +157,12 @@ class BlackjackGame(tk.Frame):
         self.lost = 0
         self.deck = []
         self.makeWidgets()
+        self.deal()
 
     def makeWidgets(self):
         """ set up GUI, i.e., create widgets """
         # globals
-        global CARD_WIDTH, CARD_HEIGHT, card_images, card_back      
+        global CARD_WIDTH, CARD_HEIGHT, card_images, card_back, card_sheet, pil_card_cropped, curr_card_image   
         
         canvas.configure(background='green4')    
         canvas.pack()
@@ -155,15 +171,8 @@ class BlackjackGame(tk.Frame):
         tk.Button(root, text='Hit', command=self.hit).pack(side="left")
         tk.Button(root, text='Stay', command=self.stay).pack(side="left")
         # add label which updates outcome
-        tk.Label(root, textvariable=self.outcome, font=('Helvetica',12), fg='white', bg='black').pack(side="left")
-        
-        # load card images
-        pil_images = Image.open("cards_jfitz.jpg")
-        card_images = ImageTk.PhotoImage(pil_images)
-
-        pil_back = Image.open("card_jfitz_back.jpg")
-        pil_cropped = pil_back.crop((0,0,72,96))
-        card_back = ImageTk.PhotoImage(pil_cropped)        
+        tk.Label(root, textvariable=self.outcome, font=('Helvetica',12), fg='white', bg='black').pack(side="left")        
+                
 
     #define event handlers for buttons
     def deal(self):
@@ -185,6 +194,9 @@ class BlackjackGame(tk.Frame):
             in_play = True
             # now draw everything
             draw(canvas)
+            # Test
+            print "Player hand: ", player_hand
+            print "Dealer hand: ", dealer_hand
         else:
             lost += 1
             outcome = "You have lost!  New deal?"
@@ -234,7 +246,6 @@ class BlackjackGame(tk.Frame):
 # draw handler  
 ##  
 def draw(canvas):
-    # test to make sure that card.draw works, replace with your code below
     global player_hand, dealer_hand, CARD_SIZE, outcome, won, lost
 
     i = 0
@@ -242,21 +253,23 @@ def draw(canvas):
 
     # draw player's hand
     for card in player_hand.hand:
-        card.draw(canvas, [25 + (i * CARD_SIZE[0]), 340])
+        player_hand.draw(canvas, [200 + (i*CARD_SIZE[0]), 340])
         i += 1    
 
     # draw dealer's hand
     for card in dealer_hand.hand:
-        card.draw(canvas, [25 + (j * CARD_SIZE[0]), 70])
+        dealer_hand.draw(canvas, [200 + (j*CARD_SIZE[0]), 70])
         j += 1
+
 
 # start frame and game
 ##
 if __name__ == '__main__':
     root = tk.Tk()
+    root.configure(background='black')
 
     # create canvas for drawing cards    
-    canvas = tk.Canvas(root, width=600, height=500)    
+    canvas = tk.Canvas(root, width=450, height=400)    
 
     # tk magic follows here
     BlackjackGame(root).pack(side="top", fill="both", expand=True)
