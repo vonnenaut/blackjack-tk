@@ -17,6 +17,9 @@ outcome = ""
 won = 0
 lost = 0
 deck = []
+xloc = 60 # x-coordinate of first card for dealer and player hands
+p_yloc = 250
+d_yloc = 100
 
 # define globals for cards
 SUITS = ('C', 'S', 'H', 'D')
@@ -26,7 +29,7 @@ VALUES = {'A':1, '2':2, '3':3, '4':4, '5':5, '6':6, '7':7, '8':8, '9':9, 'T':10,
 
 # define card class
 class Card:
-    global in_play, card_back, card_images, card_sheet, CARD_SIZE, CARD_CENTER, RANKS, SUITS, curr_card_image
+    global in_play, card_back, card_images, card_sheet, CARD_SIZE, CARD_CENTER, RANKS, SUITS, curr_card_image, xloc
 
     def __init__(self, suit, rank):
         # need to create instance reference to each image associated with a class or else they won't draw correctly
@@ -58,7 +61,7 @@ class Card:
         pil_card_cropped = card_sheet.crop((card_loc))
         self.curr_card_image = ImageTk.PhotoImage(pil_card_cropped)
         # draw current card
-        canvas.create_image(80, 300, image=self.curr_card_image)    
+        canvas.create_image(pos, image=self.curr_card_image)    
 
         # load card back image
         c_back = Image.open("card_jfitz_back.jpg")
@@ -68,11 +71,13 @@ class Card:
 
         # hide dealer's hole card if in play by drawing card back
         if in_play is True:
-            canvas.create_image(80, 120, image=self.card_back)
+            canvas.create_image((xloc,d_yloc), image=self.card_back)
     
 
 # define hand class
 class Hand:
+    global xloc, p_yloc, d_yloc
+
     def __init__(self):
         """ creates Hand object """
         self.hand = [] # an empty list for Card objects constituting a hand
@@ -111,10 +116,13 @@ class Hand:
             else:
                 return hand_value
    
-    def draw(self, canvas, pos):
+    def draw(self, canvas, yloc):
         """ draw a hand on the canvas, use the draw method for cards """
+        i = 0
+
         for card in self.hand:
-            card.draw(canvas, pos)
+            card.draw(canvas, (xloc+(i*CARD_SIZE[0]), yloc))
+            i += 1
         
 
 # define deck class 
@@ -162,7 +170,7 @@ class BlackjackGame(tk.Frame):
     def makeWidgets(self):
         """ set up GUI, i.e., create widgets """
         # globals
-        global CARD_WIDTH, CARD_HEIGHT, card_images, card_back, card_sheet, pil_card_cropped, curr_card_image   
+        global CARD_WIDTH, CARD_HEIGHT, card_images, card_back, card_sheet, pil_card_cropped, curr_card_image
         
         canvas.configure(background='green4')    
         canvas.pack()
@@ -182,25 +190,31 @@ class BlackjackGame(tk.Frame):
             # creat a Deck object and shuffle all the cards
             deck = Deck()
             deck.shuffle()
+
             # create a player hand, adding two cards from the deck
             player_hand = Hand()
             player_hand.add_card(deck.deal_card())
             player_hand.add_card(deck.deal_card())
+
             # create a dealer hand, adding two cards from the deck
             dealer_hand = Hand()
             dealer_hand.add_card(deck.deal_card())
             dealer_hand.add_card(deck.deal_card())
             self.outcome.set("Hit or stay?")
             in_play = True
+
             # now draw everything
             draw(canvas)
+
             # Test
-            print "Player hand: ", player_hand
             print "Dealer hand: ", dealer_hand
+            print "Player hand: ", player_hand
+            
         else:
             lost += 1
-            outcome = "You have lost!  New deal?"
+            self.outcome.set("You have lost!  New deal?")
             in_play = False
+            draw(canvas)
         
     def hit(self):
         """ if the hand is in play, hits the player; if busted, assigns a message to outcome, update in_play and score """
@@ -210,8 +224,13 @@ class BlackjackGame(tk.Frame):
             player_hand.add_card(deck.deal_card())
     
             if player_hand.get_value() > 21:
-                outcome = "You have busted!  Dealer wins.  New deal?"
+                self.outcome.set("You have busted!  Dealer wins.  New deal?")
                 lost += 1
+                in_play = False
+        draw(canvas)
+
+        print "\nPlayer hand: ", player_hand
+        print "Dealer hand: ", dealer_hand
         
 
     def stay(self):
@@ -224,43 +243,40 @@ class BlackjackGame(tk.Frame):
     
             if dealer_hand.get_value() > 21:
                 # print "Dealer is busted.\nPlayer wins."
-                outcome = "Dealer is busted.  Player wins.  New deal?"
+                self.outcome.set("Dealer is busted.  Player wins.  New deal?")
                 won += 1
             elif player_hand.get_value() > 21:
                 # print "Player is busted.\nDealer wins."
-                outcome = "Player is busted.  Dealer wins.  New deal?"
+                self.outcome.set("Player is busted.  Dealer wins.  New deal?")
                 lost += 1
             elif dealer_hand.get_value() >= player_hand.get_value():
                 # print "Dealer wins."
-                outcome = "Dealer wins.  New deal?"
+                self.outcome.set("Dealer wins.  New deal?")
                 lost += 1
             else:
                 # print "Player wins."
-                outcome = "Player wins!  New deal?"
+                self.outcome.set("Player wins!  New deal?")
                 won += 1
-    
         in_play = False
+        draw(canvas)
+        # Test 
+        print "\nPlayer hand: ", player_hand
+        print "Dealer hand: ", dealer_hand
+
 
 
 
 # draw handler  
 ##  
 def draw(canvas):
-    global player_hand, dealer_hand, CARD_SIZE, outcome, won, lost
+    global player_hand, dealer_hand, outcome, won, lost
 
-    i = 0
-    j = 0
+    # draw player's hand at y-location of 250
+    player_hand.draw(canvas, 250) 
 
-    # draw player's hand
-    for card in player_hand.hand:
-        player_hand.draw(canvas, [200 + (i*CARD_SIZE[0]), 340])
-        i += 1    
-
-    # draw dealer's hand
-    for card in dealer_hand.hand:
-        dealer_hand.draw(canvas, [200 + (j*CARD_SIZE[0]), 70])
-        j += 1
-
+    # draw dealer's hand at y-location of 100
+    dealer_hand.draw(canvas, 100)
+    
 
 # start frame and game
 ##
