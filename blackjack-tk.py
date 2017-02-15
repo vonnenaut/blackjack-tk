@@ -16,8 +16,6 @@ card_sheet = None
 card_back = None
 in_play = False
 outcome = ""
-won = 0
-lost = 0
 deck = []
 xloc = 60 # x-coordinate of first card for dealer and player hands
 p_yloc = 250
@@ -165,7 +163,7 @@ class BlackjackGame(tk.Frame):
         self.outcome = tk.StringVar()
         self.outcome.set("")
         self.score = tk.StringVar()
-        self.score.set(str(won) + "/" + str(lost))
+        self.score.set(str(self.won) + "/" + str(self.lost))
         self.makeWidgets()
         self.deal()
 
@@ -196,7 +194,7 @@ class BlackjackGame(tk.Frame):
 
     #define event handlers for buttons
     def deal(self):
-        global outcome, in_play, deck, player_hand, dealer_hand, outcome, lost
+        global outcome, in_play, deck, player_hand, dealer_hand, outcome
         
         if in_play is not True:
             # creat a Deck object and shuffle all the cards
@@ -226,6 +224,8 @@ class BlackjackGame(tk.Frame):
             lost += 1
             self.outcome.set("You have lost!  New deal?")
             in_play = False
+            self.lost += 1
+            self.score.set(str(self.won) + "/" + str(self.lost))
             draw(canvas)
         
     def hit(self):
@@ -237,7 +237,8 @@ class BlackjackGame(tk.Frame):
     
             if player_hand.get_value() > 21:
                 self.outcome.set("You have busted!  Dealer wins.  New deal?")
-                lost += 1
+                self.lost += 1
+                self.score.set(str(self.won) + "/" + str(self.lost))
                 in_play = False
         draw(canvas)
 
@@ -247,7 +248,7 @@ class BlackjackGame(tk.Frame):
 
     def stay(self):
         """ if hand is in play, repeatedly hit dealer until his hand has value 17 or more; assign a message to outcome, update in_play and score """
-        global dealer_hand, deck, outcome, in_play, won, lost
+        global dealer_hand, deck, outcome, in_play
     
         if in_play:
             while dealer_hand.get_value() < 17:
@@ -256,30 +257,31 @@ class BlackjackGame(tk.Frame):
             if dealer_hand.get_value() > 21:
                 # print "Dealer is busted.\nPlayer wins."
                 self.outcome.set("Dealer is busted.  Player wins.  New deal?")
-                won += 1
+                self.won += 1
+                self.score.set(str(self.won) + "/" + str(self.lost))
             elif player_hand.get_value() > 21:
                 # print "Player is busted.\nDealer wins."
                 self.outcome.set("Player is busted.  Dealer wins.  New deal?")
-                lost += 1
+                self.lost += 1
+                self.score.set(str(self.won) + "/" + str(self.lost))
             elif dealer_hand.get_value() >= player_hand.get_value():
                 # print "Dealer wins."
                 self.outcome.set("Dealer wins.  New deal?")
-                lost += 1
+                self.lost += 1
+                self.score.set(str(self.won) + "/" + str(self.lost))
             else:
                 # print "Player wins."
                 self.outcome.set("Player wins!  New deal?")
-                won += 1
+                self.won += 1
+                self.score.set(str(self.won) + "/" + str(self.lost))
         in_play = False
         draw(canvas)
-        # Test 
-        print "\nPlayer hand: ", player_hand
-        print "Dealer hand: ", dealer_hand
 
 
 # draw handler  
 ##  
 def draw(canvas):
-    global player_hand, dealer_hand, outcome, won, lost
+    global player_hand, dealer_hand, outcome
 
     # draw player's hand at y-location of 250
     player_hand.draw(canvas, p_yloc) 
