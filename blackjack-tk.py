@@ -300,4 +300,3 @@ if __name__ == '__main__':
     # tk magic follows here
     BlackjackGame(root).pack(side="top", fill="both", expand=True)
     root.mainloop()
-d
