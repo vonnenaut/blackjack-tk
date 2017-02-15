@@ -5,6 +5,8 @@ from PIL import Image, ImageTk
 
 # globals
 ##
+CANVAS_WIDTH = 600
+CANVAS_HEIGHT = 400
 CARD_SIZE = (72, 96)
 CARD_CENTER = (36, 48)
 CARD_BACK_SIZE = (72, 96)
@@ -76,7 +78,7 @@ class Card:
 
 # define hand class
 class Hand:
-    global xloc, p_yloc, d_yloc
+    global xloc
 
     def __init__(self):
         """ creates Hand object """
@@ -118,11 +120,9 @@ class Hand:
    
     def draw(self, canvas, yloc):
         """ draw a hand on the canvas, use the draw method for cards """
-        i = 0
-
+        
         for card in self.hand:
-            card.draw(canvas, (xloc+(i*CARD_SIZE[0]), yloc))
-            i += 1
+            card.draw(canvas, (xloc+(self.hand.index(card)*CARD_SIZE[0]), yloc))
         
 
 # define deck class 
@@ -159,18 +159,20 @@ class BlackjackGame(tk.Frame):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
         self.in_play = False
-        self.outcome = tk.StringVar()
-        self.outcome.set("")
         self.won = 0
         self.lost = 0
         self.deck = []
+        self.outcome = tk.StringVar()
+        self.outcome.set("")
+        self.score = tk.StringVar()
+        self.score.set(str(won) + "/" + str(lost))
         self.makeWidgets()
         self.deal()
 
     def makeWidgets(self):
         """ set up GUI, i.e., create widgets """
         # globals
-        global CARD_WIDTH, CARD_HEIGHT, card_images, card_back, card_sheet, pil_card_cropped, curr_card_image
+        global CARD_SIZE, card_images, card_back, card_sheet, pil_card_cropped, curr_card_image, xloc, d_yloc
         
         canvas.configure(background='green4')    
         canvas.pack()
@@ -178,8 +180,18 @@ class BlackjackGame(tk.Frame):
         tk.Button(root, text='Deal', command=self.deal).pack(side="left")
         tk.Button(root, text='Hit', command=self.hit).pack(side="left")
         tk.Button(root, text='Stay', command=self.stay).pack(side="left")
+        # add label for dealer's hand
+        canvas_label_d = canvas.create_text(30, (d_yloc - CARD_SIZE[1]/2), anchor="sw")
+        canvas.itemconfig(canvas_label_d, text="Dealer's hand: ")
+        # add label for player's hand
+        canvas_label_p = canvas.create_text(30, (p_yloc - CARD_SIZE[1]/2), anchor="sw")
+        canvas.itemconfig(canvas_label_p, text="Player's hand: ")
         # add label which updates outcome
-        tk.Label(root, textvariable=self.outcome, font=('Helvetica',12), fg='white', bg='black').pack(side="left")        
+        tk.Label(root, textvariable=self.outcome, font=('Helvetica',12), fg='white', bg='black').pack(side="left")
+        # add label for updating score
+        canvas_label_score = canvas.create_text(CANVAS_WIDTH - 50, 30, anchor="sw")
+        canvas.itemconfig(canvas_label_score, text=self.score.get())
+
                 
 
     #define event handlers for buttons
@@ -264,18 +276,16 @@ class BlackjackGame(tk.Frame):
         print "Dealer hand: ", dealer_hand
 
 
-
-
 # draw handler  
 ##  
 def draw(canvas):
     global player_hand, dealer_hand, outcome, won, lost
 
     # draw player's hand at y-location of 250
-    player_hand.draw(canvas, 250) 
+    player_hand.draw(canvas, p_yloc) 
 
     # draw dealer's hand at y-location of 100
-    dealer_hand.draw(canvas, 100)
+    dealer_hand.draw(canvas, d_yloc)
     
 
 # start frame and game
@@ -285,8 +295,9 @@ if __name__ == '__main__':
     root.configure(background='black')
 
     # create canvas for drawing cards    
-    canvas = tk.Canvas(root, width=450, height=400)    
+    canvas = tk.Canvas(root, width=CANVAS_WIDTH, height=CANVAS_HEIGHT)    
 
     # tk magic follows here
     BlackjackGame(root).pack(side="top", fill="both", expand=True)
     root.mainloop()
+d
