@@ -190,9 +190,7 @@ class BlackjackGame(tk.Frame):
         canvas_label_score = canvas.create_text(CANVAS_WIDTH - 50, 30, anchor="sw")
         canvas.itemconfig(canvas_label_score, text=self.score.get())
 
-                
-
-    #define event handlers for buttons
+     #define event handlers for buttons
     def deal(self):
         global outcome, in_play, deck, player_hand, dealer_hand, outcome
         
